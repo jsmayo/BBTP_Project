@@ -1,10 +1,10 @@
 package edu.ncsu.csc216.bbtp.util;
 
-public class ArrayList {
+public class ArrayList implements List{
 	/** Default serialization number */
 	private static final long serialVersionUID = 1L;
 	/** Integer used for resizing */
-	private static final int RESIZE;
+	private static final int RESIZE = 10;
 	/** Array to implement ArrayList behaivors */
 	private Object[] list;
 	/** Size of the array. */
