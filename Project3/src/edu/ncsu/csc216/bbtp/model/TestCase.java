@@ -183,7 +183,7 @@ public class TestCase extends Observable {
 	 * Sets the field value of testingType to that of: testingType.
 	 * @param testingType the value assigned to testingType.
 	 */
-	private void setTestingType(TestingType testingType) {
+	protected void setTestingType(TestingType testingType) {
 		this.testingType = testingType;
 	}
 
