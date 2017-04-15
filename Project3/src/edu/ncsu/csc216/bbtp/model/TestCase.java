@@ -34,7 +34,7 @@ public class TestCase extends Observable {
 	 * @param actualResults Results after the TestCase was tested.
 	 * @param pass Boolean to represent if the TestCase passed or failed.
 	 */
-	TestCase(String id, String description, TestingType testingType, Date creationDateTime, String expectedResults, 
+	public TestCase(String id, String description, TestingType testingType, Date creationDateTime, String expectedResults, 
 			boolean tested, Date lastTestedDate, String actualResults, boolean pass) {
 		this.setCreationDateTime(creationDateTime);
 		this.setTestingType(testingType);
