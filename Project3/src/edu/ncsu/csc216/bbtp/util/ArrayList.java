@@ -87,7 +87,8 @@ public class ArrayList implements List{
 	/**
 	 * Removes an Object from from the array at the given index value.
 	 * @param index Index to remove the object from.
-	 * @throws IndexOutOfBoundsException if the given index < 0 or > size.
+	 * @throws IndexOutOfBoundsException if the given index less than 0 or
+	 * greater than or equals to the size.
 	 * @return removed The object removed from the Array.
 	 */
 	public Object remove(int index) {
@@ -98,7 +99,7 @@ public class ArrayList implements List{
 	
 	/**
 	 * Returns the number of elements within the Array. Any iterators that use size should
-	 * not allow >= size(), since doing so will throw an IOOBE.
+	 * not allow greater than size(), since doing so will throw an IOOBE.
 	 * @return Number of elements within the Array.
 	 */
 	public int size() {

@@ -111,11 +111,11 @@ public class BBTP extends Observable implements Serializable, Observer {
     }
     
     /**
-     * REturns the TestCaseList at the given index. If the index < 0 
-     * or the index >= size(), an IndexOutOfBoundsException will be thrown.
+     * Returns the TestCaseList at the given index. If the index is less than 0 
+     * or the index or greater than size(), an IndexOutOfBoundsException will be thrown.
      * @param index Index to retrieve the TestCaseList from.
      * @return TestCaseList at the given index.
-     * @throws IndexOutOfBoundsException if the index < 0 or >= size()
+     * @throws IndexOutOfBoundsException if the index less than 0 or greater or equals to size()
      */
     public TestCaseList getTestCaseList(int index){
     	if(index < 0 || index >= testCases.length) throw new IndexOutOfBoundsException(); 
@@ -142,8 +142,8 @@ public class BBTP extends Observable implements Serializable, Observer {
     /**
      * Removes a TestCaseList at the given index value.
      * @param index Index value to remove the TestCaseList from.
-     * @throws IndexOutOfBoundsException if the index < 0 or >= the number of
-     * TestCaseLists available.
+     * @throws IndexOutOfBoundsException if the index less than 0 or greater or equals 
+     * the number of TestCaseLists available.
      */
     public void removeTestCaseList(int index) {
     	if(index < 0 || index >= testCases.length) throw new IndexOutOfBoundsException();

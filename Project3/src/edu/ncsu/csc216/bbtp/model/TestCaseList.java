@@ -98,7 +98,8 @@ public class TestCaseList extends Observable implements Tabular, Serializable, O
 	 * Returns the TestCase at the given index.  
 	 * @param index Index to retrieve the TestCase from.
 	 * @return TestCase at the given Index or null if not found.
-	 * @throws IndexOutOfBoundsException if the index < 0 or >= size.
+	 * @throws IndexOutOfBoundsException if the index is less than 0
+	 * or greater than or equals to the size.
 	 */
 	public TestCase getTestCaseAt(int index){
 		if(index < 0 || index >= size()) throw new IndexOutOfBoundsException();

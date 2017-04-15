@@ -32,8 +32,8 @@ public class LinkedList implements List, Serializable {
 	 * Adds an Object to the LinkedList at the given index.
 	 * @param index Index to add the Object at.
 	 * @param o Object to add at the given index.
-	 * @throws IndexOutOfBoundsException if the given index is < 0
-	 * or > size().
+	 * @throws IndexOutOfBoundsException if the given index less than 0 or
+	 * greater than or equals to the size.
 	 */
 	public void add(int index, Object o) {
 		if(index < 0 || index > size()) throw new IndexOutOfBoundsException();
@@ -52,7 +52,8 @@ public class LinkedList implements List, Serializable {
 	 * Retrieves the Object at the given index.
 	 * @param index Index to retrieve the Object from.
 	 * @return Object at the given index.
-	 * @throws IndexOutOfBoundsException if the given index is < 0
+	 * @throws IndexOutOfBoundsException if the given index less than 0 or
+	 * greater than or equals to the size.
 	 */
 	public Object get(int index) {
 		if(index < 0 || index > size()) throw new IndexOutOfBoundsException();
@@ -81,7 +82,8 @@ public class LinkedList implements List, Serializable {
 	 * Retrieves the Object at the given index.
 	 * @param index Index to retrieve the Object from.
 	 * @return removed Object removed from the LinkedList.
-	 * @throws IndexOutOfBoundsException if the given index is < 0
+	 * @throws IndexOutOfBoundsException if the given index less than 0 or
+	 * greater than or equals to the size.
 	 */
 	public Object remove(int index) {
 		if(index < 0 || index > size()) throw new IndexOutOfBoundsException();
