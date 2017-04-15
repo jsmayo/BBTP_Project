@@ -143,7 +143,7 @@ public class TestCase extends Observable {
 	 * Returns the value assigned to testedStatus.
 	 * @return testedStatus The field value assigned to testedStatus. 
 	 */
-	public boolean isTestedStatus() {
+	public boolean tested() {
 		return testedStatus;
 	}
 
@@ -159,7 +159,7 @@ public class TestCase extends Observable {
 	 * Returns the value assigned to pass.
 	 * @return pass The field value assigned to pass. 
 	 */
-	public boolean isPass() {
+	public boolean pass() {
 		return pass;
 	}
 
@@ -238,6 +238,10 @@ public class TestCase extends Observable {
 //		this.testCaseID = id;
 //	}
 
+	/**
+	 * Generates the hashcode for the current TestCase.
+	 * @return hashcode of the TestCase.
+	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -251,6 +255,10 @@ public class TestCase extends Observable {
 		return result;
 	}
 
+	/**
+	 * Compares the current object to that of the given. 
+	 * @return true if the objects are equal on all fields. 
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -287,6 +295,10 @@ public class TestCase extends Observable {
 		return true;
 	}
 
+	/**
+	 * Returns a String with all field values separated by a comma. 
+	 * @return String of all TestCase fields separated by a comma. 
+	 */
 	@Override
 	public String toString() {
 		return "TestCase [testCaseID=" + testCaseID + ", description=" + description + ", expectedResults="
