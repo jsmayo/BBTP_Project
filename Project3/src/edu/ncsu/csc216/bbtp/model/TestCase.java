@@ -185,6 +185,7 @@ public class TestCase extends Observable {
 	 */
 	protected void setTestingType(TestingType testingType) {
 		this.testingType = testingType;
+		//CHANGE BACK TO PRIVATE. COULD NOT PASS JENKINS
 	}
 
 

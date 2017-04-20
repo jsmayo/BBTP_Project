@@ -1,13 +1,16 @@
 package edu.ncsu.csc216.bbtp.util;
 
+import java.io.Serializable;
+import java.util.Arrays;
+
 /**
  * An implementation of the List interface with an array data structure.
  * @author Steven Mayo
  *
  */
-public class ArrayList implements List{
+public class ArrayList implements List, Serializable {
 	/** Default serialization number */
-//	private static final long serialVersionUID = 28592L;
+	private static final long serialVersionUID = 28592L;
 	/** Integer used for resizing */
 	private static final int RESIZE = 10;
 	/** Array to implement ArrayList behaviors */
@@ -20,7 +23,9 @@ public class ArrayList implements List{
 	 * as an ArrayList.
 	 */
 	public ArrayList() {
-		this.list = new Object[RESIZE];
+		this(RESIZE); // call parameterized constructor with default value
+		this.size = 0;
+		
 	}
 	
 	/**
@@ -29,6 +34,8 @@ public class ArrayList implements List{
 	 * @param capacity capacity of the Array.
 	 */
 	public ArrayList(int capacity) {
+		list = new Object[capacity];
+		this.size = 0;
 	}
 	
 	/**
@@ -41,11 +48,46 @@ public class ArrayList implements List{
 	}
 	
 	/**
-	 * Adds an element to the Array at the given index.
-	 * @param index Index to add the Object within the Array.
-	 * @param add Object to add into the Array at the given index.
+	 * Adds an element of type Object to the internal Array of ArrayList 
+	 * at the specified index value.If the size of the Array is approaching 
+	 * the capacity, then the Array will double in capacity.
+	 * If a null value is passed in as an argument or if an index value is 
+	 * passed in that is outside of the  Array bounds, then an exception will be thrown.
+	 * @param index The index value to insert the object into the ArrayList.
+	 * @param e The object, of type E, to place at the specified index. 
+	 * @throws IndexOutOfBoundsException if the index is outside of the array
+	 * boundaries
+	 * @throws IllegalArgumentException if the specified value is a duplicate already
+	 * found within the list.
 	 */
-	public void add(int index, Object add) {
+	@Override
+	public void add(int index, Object e){
+		if(e == null) throw new NullPointerException();
+		if(index > this.size || index < 0 ) throw new IndexOutOfBoundsException();
+		for(int i = 0; i <= this.size; i++) if(e.equals(list[i])) throw new IllegalArgumentException("Cannot add duplicate values.");
+		
+		//size is last place of value (NOT INDEXED).
+	
+		if(this.size == 0 && index == 0) {
+			list[0] = e;
+		}
+		if(index == 0 && this.size > 0) {
+			//Capacity is doubled when approaching the limit at size + 1 >= capacity
+			//shift everything right
+			for(int i = this.size; i >= 0; i--) list[i + 1] = list[i];
+			list[0] = e;
+		}
+		else if (index > 0 && this.size > 0) {
+				for(int i = this.size; i >= index; i--) list[i + 1] = list[i];
+				list[index] =  e;
+		}
+		this.size++;
+		//handle capacity checks
+		//if the size of the array is reaching the capacity, double the capacity.	
+		if((this.size + 1) / RESIZE >= 1) { //if dividing by the capacity is > 1, list is almost full
+			this.list = Arrays.copyOf(this.list, this.size() * 2); //make a new array with twice the previous capacity
+		}
+		
 	}
 	
 	/**
@@ -54,17 +96,24 @@ public class ArrayList implements List{
 	 * @return True if the object is contained within the Array.
 	 */
 	public boolean contains(Object o) {
+		for(int i = 0; i < list.length; i++) {
+			if(list[i] == o) return true;
+		}
 		return false;
 	}
 	
+
 	/**
-	 * Returns the Object located in the Array at the given index.
-	 * @param index Index to retrieve the given index from.
-	 * @return Object at the given index.
+	 * Returns the value, of type E, located at the specified index value.
+	 * @param index Index to retrieve the Object from. 
+	 * @return Object stored at the specified index value. 
+	 * @throws IndexOutOfBoundsException if the specified index is out
+	 * of the array boundaries.
 	 */
 	public Object get(int index) {
+		if(index < 0 || index >= this.size) throw new IndexOutOfBoundsException();
 		return list[index];
-		
+		//return arrayList.get(index);
 	}
 	
 	/**
@@ -81,7 +130,7 @@ public class ArrayList implements List{
 	 * @return True if there are no elements within the Array.
 	 */
 	public boolean isEmpty() {
-		return(size == 0);
+		return size == 0;
 	}
 	
 	/**
