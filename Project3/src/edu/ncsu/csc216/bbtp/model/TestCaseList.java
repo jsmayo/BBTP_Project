@@ -8,7 +8,7 @@ import java.util.Observer;
 import edu.ncsu.csc216.bbtp.util.LinkedList;
 
 /**
- * TestCaseList uses behaivor defined by LinkedList to house and maintain a list
+ * TestCaseList uses behavior defined by LinkedList to house and maintain a list
  * of TestCases. 
  * 
  * @author Steven Mayo
@@ -23,10 +23,15 @@ public class TestCaseList extends Observable implements Tabular, Serializable, O
 	
 	/**
 	 * Constructor for TestCaseList
-	 * @param list name of the TestCaseList
+	 * @param name Name of the TestCaseList
 	 * @param id ID of the TestCaseList
 	 */
-	public TestCaseList(String list, String id){
+	public TestCaseList(String name, String id){
+		if(name == null || name.isEmpty() || id == null || id.isEmpty()) 
+			throw new IllegalArgumentException();
+		this.list = new LinkedList();
+		setName(name);
+		this.nextTestCaseNum = 1;
 		setTestCaseListID(id);
 	}
 	
@@ -43,6 +48,10 @@ public class TestCaseList extends Observable implements Tabular, Serializable, O
 	 * @param name Name to assign the TestCaseList.
 	 */
 	public void setName(String name) {
+		if(name == null || name.isEmpty()) throw new IllegalArgumentException();
+		this.name = name;
+		setChanged();
+		notifyObservers(this);
 	}
 	
 	/**
@@ -78,7 +87,7 @@ public class TestCaseList extends Observable implements Tabular, Serializable, O
 	
 	/**
 	 * Adds a TestCase to the current TestCaseList. 
-	 * @param name Name of the TestCase.
+	 * @param desc Description of the TestCase.
 	 * @param type Type of the TestCase.
 	 * @param creation Date of creation for the TestCase.
 	 * @param er Expected results of the TestCase.
@@ -88,9 +97,22 @@ public class TestCaseList extends Observable implements Tabular, Serializable, O
 	 * @param passed Boolean value assigned to tell if a TestCase passed or failed. 
 	 * @return True if the TestCase was added to the TestCaseList. 
 	 */
-	public boolean addTestCase(String name, TestingType type, Date creation, String er, boolean tested,
+	public boolean addTestCase(String desc, TestingType type, Date creation, String er, boolean tested,
 			Date lastTested, String ar, boolean passed ) {
-		this.incNextTestCaseNum();
+		String name = this.getTestCaseListID() + "-TC" + this.getNextTestCaseNum();
+		TestCase tc = new TestCase(name, desc, type, creation, er, tested, lastTested, ar, passed);
+		//add in order.
+		for(int i = 0; i < list.size(); i++) { //loop for sort
+			if(((TestCase)list.get(i)).compareTo(tc) < 0) continue;
+			else {
+				list.add(i - 1, tc); //add before comparison failed. 
+				tc.addObserver(this); //add the observer
+				setChanged(); //mark the observerable as changed.
+				notifyObservers(this); //notify others of change in TCL
+				this.incNextTestCaseNum();
+				return true;
+			}
+		}
 		return false;
 	}
 	
@@ -103,16 +125,20 @@ public class TestCaseList extends Observable implements Tabular, Serializable, O
 	 */
 	public TestCase getTestCaseAt(int index){
 		if(index < 0 || index >= size()) throw new IndexOutOfBoundsException();
-		return null;
+		else return ((TestCase)list.get(index));
+		
 	}
 	
 	/**
 	 * Returns the index of the TestCase representing the given TestCase name.
-	 * @param name Name of the TestCase.
+	 * @param id ID of the TestCase.
 	 * @return index of the TestCase if found, -1 if not. 
 	 */
-	public int indexOf(String name) {
-		return -1;
+	public int indexOf(String id) {
+		for(int i = 0; i < list.size(); i++) {
+			if(((TestCase)list.get(i)).getTestCaseID().equals(id)) return i;
+		}
+		return -1; //if not found
 	}
 	
 	/**
@@ -137,16 +163,31 @@ public class TestCaseList extends Observable implements Tabular, Serializable, O
 	 * @return removed The TestCase removed from the TestCaseList. 
 	 */
 	public TestCase removeTestCaseAt(int index) {
-		TestCase removed = null;
+		if(index < 0 || index >= list.size()) throw new IllegalArgumentException();
+		TestCase removed = this.getTestCaseAt(index);
+		setChanged(); //mark the list as changed
+		notifyObservers(this); //notify observers that list changed
+		removed.deleteObserver(this); //remove the list from the observers
+		list.remove(index); //remove object from the list 
 		return removed;
 	}
 	
 	/**
 	 * Removes a TestCase that matches the given TestCase name. 
-	 * @param name Name of the TestCase to remove. 
+	 * @param id ID of the TestCase to remove. 
 	 * @return True if the TestCase was removed. 
 	 */
-	public boolean removeTestCase(String name) {
+	public boolean removeTestCase(String id) {
+		for(int i = 0; i < list.size(); i++) {
+			if(((TestCase)list.get(i)).getTestCaseID().equals(id)) {
+				TestCase tc = (TestCase)list.get(i); //get list from LL<object> and cast
+				list.remove(i); //remove from list
+				setChanged(); //mark list as changed
+				notifyObservers(this); //notify observers of LL 
+				tc.deleteObserver(this); //remove LL as observer
+				return true;
+			}
+		}
 		return false;
 	}
 	
@@ -155,7 +196,19 @@ public class TestCaseList extends Observable implements Tabular, Serializable, O
 	 * @return 2D Object array of the TestCaseList TestCase's name and id's.
 	 */
 	public Object[][] get2DArray() {
-		return new Object[0][0];
+		Object[][] listInfo = new Object[list.size()][9];
+		for(int i = 0; i < list.size(); i++) {
+			listInfo[i][0] = ((TestCase)list.get(i)).getTestCaseID();
+			listInfo[i][1] = ((TestCase)list.get(i)).getDescription();
+			listInfo[i][2] = ((TestCase)list.get(i)).getTestingType();
+			listInfo[i][3] = ((TestCase)list.get(i)).getCreationDateTime();
+			listInfo[i][4] = ((TestCase)list.get(i)).getLastTestedDateTime();
+			listInfo[i][5] = ((TestCase)list.get(i)).tested();
+			listInfo[i][6] = ((TestCase)list.get(i)).getExpectedResults();
+			listInfo[i][7] = ((TestCase)list.get(i)).getActualResults();
+			listInfo[i][8] = ((TestCase)list.get(i)).pass();
+		}
+		return listInfo;
 	}
 	
 	/**
@@ -165,6 +218,7 @@ public class TestCaseList extends Observable implements Tabular, Serializable, O
 	 * @param o Object that underwent change. 
 	 */
 	public void update(Observable obs, Object o) {	
+		if(list.contains(o)) notifyObservers(o);
 	
 	}
 	

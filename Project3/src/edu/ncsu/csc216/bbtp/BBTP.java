@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -47,8 +48,10 @@ public class BBTP extends Observable implements Serializable, Observer {
      * Constructor for the BBTP object. 
      */
     public BBTP() {
-    	testCases = new TestCaseList[RESIZE];
-    	
+    	testCases = new TestCaseList[RESIZE]; //construct with minimum of 3
+    	numLists = addTestCaseList();  //will call, add the TCL, return 1.
+    	testingTypes = new TestingTypeList();
+    	changed = false;
     }
     
     /**
@@ -56,7 +59,7 @@ public class BBTP extends Observable implements Serializable, Observer {
      * @return True if the boolean stored in changed is True.
      */
     public boolean isChanged() {
-    	return false;
+    	return changed;
     }
     
     /**
@@ -64,7 +67,7 @@ public class BBTP extends Observable implements Serializable, Observer {
      * @param b Boolean to set the changed field.
      */
     public void setChanged(boolean b) {
-    	changed = b;
+    	this.changed = b;
     }
     
     /**
@@ -72,7 +75,7 @@ public class BBTP extends Observable implements Serializable, Observer {
      * @return The value given to the filename field.
      */
     public String getFilename() {
-    	return filename;
+    	return this.filename;
     }
     
     /**
@@ -88,18 +91,20 @@ public class BBTP extends Observable implements Serializable, Observer {
     }
     
     /**
-     * Returns the next TestCaseList number.
+     * Returns the value assigned to nextTestCaseListNumber, which corresponds
+     * to the next number that will be assigned to the addition of testCases.
      * @return Number of the next TestCaseList.
      */
     private int getNextTestCaseListNum() {
-    	return this.nextTestCaseListNum++;
+    	return nextTestCaseListNum;
     }
     
     /**
      * Increases the number for the NextTestCaseList by 1.
      */
     private void incNextTestCaseListNum() {
-    	this.nextTestCaseListNum = getNextTestCaseListNum() + 1;
+    	nextTestCaseListNum = getNextTestCaseListNum() + 1; //added to satisfy jenkins CS warning. (versus simplified call.. i.e ++);
+    	
     }
     
     /**
@@ -119,7 +124,7 @@ public class BBTP extends Observable implements Serializable, Observer {
      */
     public TestCaseList getTestCaseList(int index){
     	if(index < 0 || index >= testCases.length) throw new IndexOutOfBoundsException(); 
-    	return new TestCaseList("string", "string");
+    	return testCases[index];
     }
     
     /**
@@ -135,8 +140,16 @@ public class BBTP extends Observable implements Serializable, Observer {
      * @return numLists the Current number of TestCaseLists (after increased).
      */
     public int addTestCaseList() {
-    	this.incNextTestCaseListNum();
-    	return numLists++;
+    	if(getNumTestCaseLists() + 1 >= testCases.length) {
+    		testCases = Arrays.copyOf(testCases, testCases.length + RESIZE); //resize if approaching capacity
+    	}
+    	testCases[getNumTestCaseLists()] = new TestCaseList("New List", "TCL" + this.nextTestCaseListNum);
+    	testCases[getNumTestCaseLists()].addObserver(this); // add observer to new index index, haven't updated numLists yet so OK
+    	numLists++;
+    	incNextTestCaseListNum(); //make sure the next list is updated. 
+    	setChanged();
+    	notifyObservers(testCases[getNumTestCaseLists() - 1]); //notify observers of the change that occurred.
+    	return numLists;
     }
     
     /**
@@ -147,6 +160,16 @@ public class BBTP extends Observable implements Serializable, Observer {
      */
     public void removeTestCaseList(int index) {
     	if(index < 0 || index >= testCases.length) throw new IndexOutOfBoundsException();
+    	TestCaseList removed = testCases[index];
+    	TestCaseList[] copy = new TestCaseList[testCases.length - 1];
+    	for(int i = 0; i < testCases.length; i++) {
+    		if(i == index) continue;
+    		else copy[i] = testCases[i];
+    	}
+    	numLists--; //reduce the list tracker. 
+    	removed.deleteObserver(this);
+    	setChanged();
+    	notifyObservers(removed);
     }
     
     	
@@ -240,7 +263,7 @@ public class BBTP extends Observable implements Serializable, Observer {
 
 	@Override
 	public void update(Observable o, Object arg) {
-		// TODO Auto-generated method stub
+		notifyObservers(arg); //notifying observers that the argument passed in (BBTP) changed.
 		
 	}
 

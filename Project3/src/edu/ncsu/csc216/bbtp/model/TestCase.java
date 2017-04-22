@@ -1,7 +1,9 @@
 package edu.ncsu.csc216.bbtp.model;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Observable;
+
 
 /**
  * A representation of a TestCase in the BBTP application. A TestCase has a  TestingType.
@@ -9,9 +11,9 @@ import java.util.Observable;
  * @author Steven Mayo
  *
  */
-public class TestCase extends Observable {
+public class TestCase extends Observable implements Serializable {
 
-	//private static final long serialVersionUID = 7459L;
+	private static final long serialVersionUID = 7459L;
 	private String testCaseID;
 	private Date creationDateTime;
 	private String description;
@@ -36,6 +38,9 @@ public class TestCase extends Observable {
 	 */
 	public TestCase(String id, String description, TestingType testingType, Date creationDateTime, String expectedResults, 
 			boolean tested, Date lastTestedDate, String actualResults, boolean pass) {
+		//if(description == null || description.isEmpty() || description.length() == 0) throw new IllegalArgumentException();
+		setDescription(description);
+		setExpectedResults(expectedResults);
 		this.setCreationDateTime(creationDateTime);
 		this.setTestingType(testingType);
 		
@@ -52,9 +57,21 @@ public class TestCase extends Observable {
 	/**
 	 * Sets the Description of the TestCase.
 	 * @param desc Description of the TestCase.
+	 * @throws IllegalArgumentException  If the 
+	 * expectedResults parameter is  null, the empty string,
+	 *  or whitespace only
 	 */
 	public void setDescription(String desc) {
-		this.description = desc;
+		if(desc == null || desc.isEmpty()) throw new IllegalArgumentException();
+		for(int i = 0; i < description.length(); i++) {
+			if(!Character.isWhitespace(desc.charAt(i))) {
+				this.description = desc; //exit loop at first instance of non WS char.
+				setChanged();
+				notifyObservers(this);
+				return;
+			}
+		}
+		throw new IllegalArgumentException(); //if exiting the loop -> nothing but whitespace	
 	}
 	
 	/**
@@ -62,7 +79,16 @@ public class TestCase extends Observable {
 	 * @param exp Expected results of the TestCase.
 	 */
 	public void setExpectedResults(String exp) {
-		this.expectedResults = exp;
+		if(exp == null || exp.isEmpty()) throw new IllegalArgumentException();
+		for(int i = 0; i < exp.length(); i++) {
+			if(!Character.isWhitespace(exp.charAt(i))) {
+				this.expectedResults = exp; //exit loop at first instance of non WS char.
+				setChanged();
+				notifyObservers(this);
+				return; 
+			}
+		}
+		throw new IllegalArgumentException(); //if exiting the loop -> nothing but whitespace
 	}
 	
 	/**
@@ -74,11 +100,25 @@ public class TestCase extends Observable {
 	}
 	
 	/**
-	 * Sets the value of the actualResults field.
+	 * Sets the value of the actualResults field
 	 * @param act Actual results of the TestCase.
 	 */
 	public void setActualResults(String act) {
-		this.actualResults = act;
+		if(!testedStatus) { //if not tested, set to param and notify.
+			actualResults = act;
+			setChanged();
+			notifyObservers(this);
+		}
+		else { //if tested
+			if(act == null || act.isEmpty()) throw new IllegalArgumentException();
+			for(char c: act.toCharArray()) {
+				if(!Character.isWhitespace(c)) {
+				this.actualResults = act; //if here, not null or empty, not all WS chars. Set and notify.  
+				setChanged(); 
+				notifyObservers(this);
+				}
+			}		
+		}
 	}
 	
 	/**
@@ -90,11 +130,13 @@ public class TestCase extends Observable {
 	}
 	
 	/**
-	 * Returns the Date of the TestCase creation.
-	 * @return creationDate Creation date of the TestCase.
+	 * Sets the field value of creationDateTime to that of: creationDateTime.
+	 * @param creationDateTime the value assigned to creationDateTime.
+	 * @throws IllegalArgumentException if the creationDateTime is null.
 	 */
-	public Date getCreationDate() {
-		return this.creationDateTime;
+	public void setCreationDateTime(Date creationDateTime) {
+		if(creationDateTime == null) throw new IllegalArgumentException();
+		this.creationDateTime = creationDateTime;
 	}
 	
 	/**
@@ -104,7 +146,6 @@ public class TestCase extends Observable {
 	public Date getCreationDateTime() {
 		return creationDateTime;
 	}
-	
 	
 
 	/**
@@ -120,7 +161,10 @@ public class TestCase extends Observable {
 	 * @param testCaseID the value assigned to testCaseID.
 	 */
 	public void setTestCaseID(String testCaseID) {
+		if(testCaseID == null || testCaseID.isEmpty()) throw new IllegalArgumentException();
 		this.testCaseID = testCaseID;
+		setChanged();
+		notifyObservers();
 	}
 
 	/**
@@ -133,10 +177,16 @@ public class TestCase extends Observable {
 
 	/**
 	 * Sets the field value of lastTestedDateTime to that of: lastTestedDateTime.
+	 * The given date can only be null if the TestCase has not previously been tested.
 	 * @param lastTestedDateTime the value assigned to lastTestedDateTime.
+	 * @throws IllegalArgumentException if a null date is provided for a TestCase that's
+	 * been marked as tested. 
 	 */
 	public void setLastTestedDateTime(Date lastTestedDateTime) {
+		if(testedStatus && lastTestedDateTime == null) throw new IllegalArgumentException();
 		this.lastTestedDateTime = lastTestedDateTime;
+		setChanged();
+		notifyObservers(this);
 	}
 
 	/**
@@ -153,6 +203,8 @@ public class TestCase extends Observable {
 	 */
 	public void setTestedStatus(boolean testedStatus) {
 		this.testedStatus = testedStatus;
+		setChanged();
+		notifyObservers(this);
 	}
 
 	/**
@@ -169,6 +221,8 @@ public class TestCase extends Observable {
 	 */
 	public void setPass(boolean pass) {
 		this.pass = pass;
+		setChanged();
+		notifyObservers(this);
 	}
 
 	/**
@@ -183,61 +237,13 @@ public class TestCase extends Observable {
 	 * Sets the field value of testingType to that of: testingType.
 	 * @param testingType the value assigned to testingType.
 	 */
-	protected void setTestingType(TestingType testingType) {
+	private void setTestingType(TestingType testingType) {
+		if(testingType == null) throw new IllegalArgumentException();
 		this.testingType = testingType;
+		setChanged();
+		notifyObservers();
 		//CHANGE BACK TO PRIVATE. COULD NOT PASS JENKINS
 	}
-
-
-	/**
-	 * Sets the field value of creationDateTime to that of: creationDateTime.
-	 * @param creationDateTime the value assigned to creationDateTime.
-	 */
-	public void setCreationDateTime(Date creationDateTime) {
-		this.creationDateTime = creationDateTime;
-	}
-
-	
-//	
-//	public void setCreationDateTime(Date creationDT) {
-//		this.creationDateTime = creationDateTime;
-//	}
-//
-//	public void setLastTestedDateTime(Date date) {
-//		this.lastTestedDateTime = date;
-//	}
-//	
-//	public boolean tested() {
-//		return this.testedStatus;
-//	}
-//	
-//	public void setTestedStatus(boolean tested) {
-//		this.testedStatus = tested;
-//	}
-//	
-//	public boolean pass() {
-//		return this.pass;
-//	}
-//	
-//	public void setPass(boolean passed) {
-//		this.pass = passed;
-//	}
-//	
-//	public void setTestingType(TestingType tt) {
-//		this.testingType = null;
-//	}
-//	
-//	public TestingType getTestingType() {
-//		return this.testingType;
-//	}
-//	
-//	public String getTestCaseID() {
-//		return this.testCaseID;
-//	}
-//	
-//	private void setTestCaseID(String id) {
-//		this.testCaseID = id;
-//	}
 
 	/**
 	 * Generates the hashcode for the current TestCase.
@@ -262,38 +268,42 @@ public class TestCase extends Observable {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		TestCase other = (TestCase) obj;
-		if (actualResults == null) {
-			if (other.actualResults != null)
-				return false;
-		} else if (!actualResults.equals(other.actualResults))
-			return false;
-		if (description == null) {
-			if (other.description != null)
-				return false;
-		} else if (!description.equals(other.description))
-			return false;
-		if (expectedResults == null) {
-			if (other.expectedResults != null)
-				return false;
-		} else if (!expectedResults.equals(other.expectedResults))
-			return false;
-		if (pass != other.pass)
-			return false;
-		if (testCaseID == null) {
-			if (other.testCaseID != null)
-				return false;
-		} else if (!testCaseID.equals(other.testCaseID))
-			return false;
-		if (testedStatus != other.testedStatus)
-			return false;
-		return true;
+		TestCase tc = (TestCase) obj;
+		if(this.getTestCaseID().equals(tc.getTestCaseID())) return true;
+		return false; 
+		
+//		if (this == obj)
+//			return true;
+//		if (obj == null)
+//			return false;
+//		if (getClass() != obj.getClass())
+//			return false;
+//		TestCase other = (TestCase) obj;
+//		if (actualResults == null) {
+//			if (other.actualResults != null)
+//				return false;
+//		} else if (!actualResults.equals(other.actualResults))
+//			return false;
+//		if (description == null) {
+//			if (other.description != null)
+//				return false;
+//		} else if (!description.equals(other.description))
+//			return false;
+//		if (expectedResults == null) {
+//			if (other.expectedResults != null)
+//				return false;
+//		} else if (!expectedResults.equals(other.expectedResults))
+//			return false;
+//		if (pass != other.pass)
+//			return false;
+//		if (testCaseID == null) {
+//			if (other.testCaseID != null)
+//				return false;
+//		} else if (!testCaseID.equals(other.testCaseID))
+//			return false;
+//		if (testedStatus != other.testedStatus)
+//			return false;
+//		return true;
 	}
 
 	/**
@@ -306,6 +316,21 @@ public class TestCase extends Observable {
 				+ expectedResults + ", actualResults=" + actualResults + ", testedStatus=" + testedStatus + ", pass="
 				+ pass + "]";
 	}
+
+
+	/**
+	 * Compares the given TestCase against that of the current TestCase. The
+	 * Comparison is made between the Date object representing the lastTestedDateTime
+	 * field of both TestCases. 
+	 * @param tc TestCase to compare the current TestCase against. 
+	 * @return 0 if the value of both TestCase's lastTestDateTime are equal, -1 if
+	 * the current is less than the given, or 1 if the current is greater than the given. 
+	 */
+	public int compareTo(TestCase tc) {
+		return this.getLastTestedDateTime().compareTo(tc.getLastTestedDateTime());
+	}
+
+	
 	
 	
 	
