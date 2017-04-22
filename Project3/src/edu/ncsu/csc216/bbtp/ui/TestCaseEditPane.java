@@ -1,5 +1,6 @@
 package edu.ncsu.csc216.bbtp.ui;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.EventListener;
 import java.util.Observable;
@@ -10,6 +11,8 @@ import javax.swing.*;
 import edu.ncsu.csc216.bbtp.model.TestingType;
 import edu.ncsu.csc216.bbtp.model.TestingTypeList;
 
+import java.awt.Color;
+import java.awt.FlowLayout;
 import java.io.Serializable;
 
 /**
@@ -35,13 +38,14 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	private TestCaseData data;
 	
 	/**
-	 * Constructor for TestCaseEditPane
-	 * @param ttl TestingTypeList.
+	 * Constructor for creating an TestCaseEditPane
+	 * 
+	 * @param ttl An empty TestingTypeList.
 	 */
 	public TestCaseEditPane(TestingTypeList ttl) {
-		init();
-		initView();
-	
+	// test case data is a member of testcase edit pane
+		this(new TestCaseData(), ttl);
+					
 	}
 	
 	/**
@@ -51,28 +55,98 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * @param ttl TestingTypeList
 	 */
 	public TestCaseEditPane(TestCaseData tcd, TestingTypeList ttl) {
-		if(testingTypes != null) testingTypes = ttl;
-		
+		super();
+		this.testingTypes =  ttl;
+		this.data = tcd;
+		// Initially there is no mode selected
+		add = false;
+        edit = false;
+		this.testingTypes.addObserver(this);
+		init();
+			
 	}
 	
-	/**
-	 * Initiates the JPanel to add components. NOT SURE
-	 */
+    /**
+     * Initializes the GUI.
+     */
 	private void init() {
+		setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+		setBorder(BorderFactory.createLineBorder(Color.black));
+		initView();
+		fillFields();
 	}
 	
 	/**
-	 * Initiates the JPanel to show components. NOT SURE
-	 */
+     * Initializes the view.
+     */
 	private void initView() {
+		//Create 1st panel under TestCaseListPane for TestCaseEditPane
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        p.add(new JLabel("Testing Case ID: ", SwingConstants.LEFT));
+        p.add(getTestCaseID());
+        p.add(new JLabel("Testing Type: ", SwingConstants.LEFT));
+        p.add(getTestingType());
+        p.add(new JLabel("TestCreation Date & Time", SwingConstants.LEFT));
+        p.add(getTestCreationDateSpinner());
+        this.add(p);
+        //Description label
+        p = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        p.add(new JLabel("Description: ", SwingConstants.LEFT));
+        this.add(p);
+        
+        //description JTextArea
+        p = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        p.add(getTestCaseDescription());
+        this.add(p);
+        
+        //tested checkbox and late test date row
+        p = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        p.add(new JLabel("Tested? ", SwingConstants.LEFT));
+        p.add(tested);
+        p.add(new JLabel("Last Tested Date & Time", FlowLayout.LEADING));
+        p.add(getLastTestedDateSpinner());
+        this.add(p);
+        
+        //Expected Label
+        p = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        p.add(new JLabel("Expected Results: ", SwingConstants.LEFT));
+        this.add(p);
+        
+        //Expected JTextArea
+        p = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        p.add(getExpectedResults());
+        this.add(p);
+        
+        //Actual Label
+        p = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        p.add(new JLabel("Actual Results: ", SwingConstants.LEFT));
+        this.add(p);
+        
+        //Actual JTextArea
+        p = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        p.add(getActualResults());
+        this.add(p);
+        
+        //Passed label and checkbox
+        p = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        p.add(new JLabel("Pass?: ", SwingConstants.LEFT));
+        p.add(pass);
+        this.add(p);
 	}
-	
-	/**
+        
+  	/**
 	 * Returns A JSpinner component for the creation date value. 
 	 * @return testCreationDate Field value assigned to testCreationDate.
 	 */
 	protected JSpinner getTestCreationDateSpinner() {
-		return testCreationDate;
+			if(testCreationDate == null) {
+				SpinnerDateModel sdm = new SpinnerDateModel();
+				sdm.setValue(data.getLastTestedDateTime());
+				testCreationDate = new JSpinner(sdm);
+				testCreationDate.setEnabled(false);
+				testCreationDate.setVisible(true);
+			}
+			return testCreationDate;	
 	}
 	
 	/**
@@ -80,7 +154,15 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * @return fieldValue assigned to lastTestedDate.
 	 */
 	protected JSpinner getLastTestedDateSpinner() {
-		return testLastTestedDate;
+		if(testLastTestedDate == null) {
+			SpinnerDateModel sdm = new SpinnerDateModel();
+			sdm.setValue(data.getLastTestedDateTime());
+			testLastTestedDate = new JSpinner(sdm);
+			testLastTestedDate.setEnabled(false);
+			testLastTestedDate.setVisible(true);
+		}
+		return testLastTestedDate;	
+
 	}
 	
 	/**
@@ -88,7 +170,7 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * @return Date object of testCreationDate field. 
 	 */
 	protected Date getTestCreationDate() {
-		return new Date();
+		return data.getCreationDateTime();
 	}
 	
 	/**
@@ -96,7 +178,8 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * @return value of lastTestedDate.
 	 */
 	protected Date getLastTestedDate() {
-		return new Date();
+		return data.getLastTestedDateTime();
+			
 	}
 	
 	/**
@@ -104,30 +187,61 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * @return testCaseID JTextField component for the TestCase ID field.
 	 */
 	protected JTextField getTestCaseID() {
+		if (null == testCaseID) {
+			testCaseID = new JTextField(50);
+			testCaseID.setEditable(false);
+			testCaseID.setVisible(true);
+			testCaseID.setHorizontalAlignment(SwingConstants.LEFT);
+		}
 		return testCaseID;
 	}
+
 	
 	/**
 	 * Returns the JTextArea field value of testCaseDescription.
 	 * @return testCaseDescription the field value of testCaseDescription. 
 	 */
 	protected JTextArea getTestCaseDescription() {
+		if (testCaseDescription == null) {
+			testCaseDescription = new JTextArea(5, 70);
+			testCaseDescription.setEditable(false);
+			testCaseDescription.setVisible(true);
+			testCaseDescription.setLineWrap(true);
+			testCaseDescription.setAutoscrolls(true);
+		}
 		return testCaseDescription;
 	}
+	
 	
 	/**
 	 * Returns the JComboBox component of tcTestingType. 
 	 * @return JComboBox component of tcTestingType. 
 	 */
 	protected JComboBox<TestingType> getTestingType() {
+		//TestingType[] tt = testingTypes.toArray(new TestingType[testingTypes.size()]);
+//		tcTestingType= new JComboBox<TestingType>(testingTypes.);
+		if(tcTestingType == null) {
+			tcTestingType = new JComboBox();
+			tcTestingType.setEditable(false);
+			tcTestingType.setVisible(true);
+		}
 		return tcTestingType;
-	}
+		
+	}		
+	
 	
 	/**
 	 * Returns JTextArea component of expectedResults field.
 	 * @return JTextArea component assigned to expectedResults.
 	 */
 	protected JTextArea getExpectedResults() {
+		if(expectedResults == null) {
+			expectedResults = new JTextArea(5, 70);
+			expectedResults.setEditable(false);
+			expectedResults.setVisible(true);
+			expectedResults.setLineWrap(true);
+			expectedResults.setAutoscrolls(true);
+		}
 		return expectedResults;
 	}
 	
@@ -136,6 +250,13 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * @return JTextArea component assigned to actualResults.
 	 */
 	protected JTextArea getActualResults() {
+		if(actualResults == null) {
+			actualResults = new JTextArea(5, 70);
+			actualResults.setEditable(false);
+			actualResults.setVisible(true);
+			actualResults.setLineWrap(true);
+			actualResults.setAutoscrolls(true);
+		}
 		return actualResults;
 	}
 	
@@ -144,14 +265,30 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * @return boolean value assigned to pass.
 	 */
 	protected JCheckBox pass() {
+		if(pass == null) {
+			pass = new JCheckBox();
+			if(getLastTestedDate() != null) {
+				pass.setSelected(true); //check if there is a date
+				pass.setEnabled(false); //do not allow interaction
+				pass.setVisible(true);
+			}
+		}
 		return pass;
 	}
-	
+
 	/**
 	 * Returns the boolean value assigned to tested.
 	 * @return tested boolean value assigned to tested. 
 	 */
 	protected JCheckBox tested() {
+		if(tested == null) {
+			tested = new JCheckBox();
+			if(getLastTestedDate() != null) {
+				tested.setSelected(true); //check if there is a date
+				tested.setEnabled(false); //do not allow interaction
+				tested.setVisible(true);
+			}
+		}
 		return tested;
 	}
 	
@@ -230,6 +367,7 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 */
 	protected void setTestCaseData(TestCaseData tcd) {
 		this.data = tcd;
+		fillFields();
 	}
 	
 	/**
@@ -256,7 +394,7 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 */
 	protected TestCaseData getFields() {
 		if(data != null) return new TestCaseData();
-		return new TestCaseData();
+		return new TestCaseData(); //do not return data, you need to update it to reflect the current fields
 	}
 	
 	/**
