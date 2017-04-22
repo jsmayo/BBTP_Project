@@ -1,18 +1,19 @@
 package edu.ncsu.csc216.bbtp.ui;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.EventListener;
 import java.util.Observable;
 import java.util.Observer;
 
 import javax.swing.*;
-
+import javax.swing.event.ChangeListener;
 import edu.ncsu.csc216.bbtp.model.TestingType;
 import edu.ncsu.csc216.bbtp.model.TestingTypeList;
 
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyListener;
 import java.io.Serializable;
 
 /**
@@ -218,12 +219,18 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * @return JComboBox component of tcTestingType. 
 	 */
 	protected JComboBox<TestingType> getTestingType() {
-		//TestingType[] tt = testingTypes.toArray(new TestingType[testingTypes.size()]);
-//		tcTestingType= new JComboBox<TestingType>(testingTypes.);
 		if(tcTestingType == null) {
-			tcTestingType = new JComboBox();
+			tcTestingType = new JComboBox<>();
 			tcTestingType.setEditable(false);
 			tcTestingType.setVisible(true);
+		}
+		else {
+			TestingType[] tt = new TestingType[testingTypes.size()];
+					for(int i = 0; i < this.testingTypes.size(); i++) 
+						tt[i] = testingTypes.getTestingTypeAt(i);
+					tcTestingType = new JComboBox<>(tt);
+					tcTestingType.setEnabled(false);
+					tcTestingType.setVisible(true);
 		}
 		return tcTestingType;
 		
@@ -306,7 +313,13 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * @param lastTested Date to assign to lastTested.
 	 */
 	protected void setLastTestedDate(Date lastTested) {
-		//this.testLastTestedDate = lastTested;
+		if(lastTested == null) testLastTestedDate.setModel(new SpinnerDateModel()); // if null, create a new JSpinner
+		else {
+			SpinnerDateModel sdm = new SpinnerDateModel();
+			sdm.setValue(lastTested);
+			testLastTestedDate.setModel(sdm);
+			//TODO notify observer here
+		}
 	}
 	
 	
@@ -315,7 +328,6 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * @return True if add mode is enabled. 
 	 */
 	protected boolean isAddMode() {
-		add = true;
 		return add;
 	}
 	
@@ -324,26 +336,39 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * @return True if Edit option is enabled. 
 	 */
 	protected boolean isEditMode() {
-		return (edit);
+		return edit;
 	}
 	
-	/**
-	 * Enables add mode. 
-	 */
-	protected void enableAdd() {
-	}
+    /**
+     * Enables add mode and disables edit.
+     */
+    public void enableAdd() {
+        if (!add) {
+            add = true;
+            edit = false;
+            clearFields();
+        }
+    }
 	
 	/**
 	 * Disables add mode. 
 	 */
-	protected void disableAdd() {
-	}
+    public void disableAdd() {
+        add = false;
+        clearFields();
+    }
 	
 	/**
 	 * Enables edit mode. 
 	 * @param tcd TestCaseData to edit. 
 	 */
 	protected void enableEdit(TestCaseData tcd) {
+		if (!edit) {
+			edit = true;
+			add = false;
+			data = tcd;
+			fillFields();
+		}
 	}
 	
 	
@@ -351,6 +376,8 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * Disables Edit mode.  
 	 */
 	protected void disableEdit() {
+		edit = false;
+		clearFields();
 	}
 	
 	/**
@@ -370,23 +397,74 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 		fillFields();
 	}
 	
-	/**
-	 * Adds an EventListener to the current field.  
-	 * @param e EventListener to add to the current field. 
-	 */
-	protected void addFieldListener(EventListener e) {
-	}
+
+	    
+    /**
+     * Adds the given DocumentListener to the txtTestingTypeName and
+     * txtTestingTypeDescription text fields.
+     * 
+     * @param e EventListener to attach to data obtained from the TestCase.
+     */
+    public void addFieldListener(EventListener e) {
+    	
+        getTestCreationDateSpinner().addChangeListener((ChangeListener) e);
+        getLastTestedDateSpinner().addChangeListener((ChangeListener) e);
+        getTestCaseID().addActionListener((ActionListener) e);
+        getTestCaseDescription().addKeyListener((KeyListener) e);
+        getTestingType().addActionListener((ActionListener) e);
+        getExpectedResults().addKeyListener((KeyListener) e);
+        getActualResults().addKeyListener((KeyListener) e);
+        pass().addActionListener((ActionListener) e);
+        tested().addActionListener((ActionListener) e);
+    
+    }
 	
 	/**
 	 * Fills all fields of TestCaseEditPane.
 	 */
 	protected void fillFields() {
+		if (data == null) { //TODO go back and make sure the ones that are accessible as a new panel are enabled
+			testCaseID.setText("");
+			testCaseID.setEnabled(false);
+			tcTestingType = null;
+			tcTestingType.setEnabled(false);
+			expectedResults.setText("");
+			actualResults.setText("");
+			testCaseDescription.setText("");
+			testCreationDate.setEnabled(false);
+			testLastTestedDate.setEnabled(false);
+			tested.setSelected(false);
+			tested.setEnabled(false);
+			pass.setSelected(false);
+			pass.setEnabled(false);
+		} else { 
+			testCaseID.setText(data.getTestCaseID());
+			tcTestingType.setSelectedItem(data.getTestingType());
+			expectedResults.setText(data.getExpectedResults());
+			actualResults.setText(data.getActualResults());
+			testCaseDescription.setText(data.getDescription());
+			this.setCreationDate(data.getCreationDateTime());
+			this.setLastTestedDate(data.getLastTestedDateTime());
+			tested.setSelected(data.tested());
+			pass.setSelected(data.pass());
+			
+		}
+		if (add || edit) { //these are the  minimum requirements for the ADD button to become enabled
+			testCaseDescription.setEditable(true);
+			expectedResults.setEditable(true);
+			tcTestingType.setEditable(true);
+			testCreationDate.setEnabled(true);
+		}
+
 	}
-	/**
-	 * Clears all fields of TestCaseEditPane.
-	 */
-	protected void clearFields() {
-	}
+
+	 /**
+     * Clears the fields by setting data to null.
+     */
+    public void clearFields() {
+        data = null;
+        fillFields();
+    }
 	
 	/**
 	 * Returns a TestCaseData object that holds data contained within field values.
