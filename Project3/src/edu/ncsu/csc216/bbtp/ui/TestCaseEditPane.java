@@ -7,6 +7,8 @@ import java.util.Observer;
 
 import javax.swing.*;
 import javax.swing.event.ChangeListener;
+
+import edu.ncsu.csc216.bbtp.model.TestCaseList;
 import edu.ncsu.csc216.bbtp.model.TestingType;
 import edu.ncsu.csc216.bbtp.model.TestingTypeList;
 
@@ -305,7 +307,12 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	 * @param creation Date to assign to testCreationDate.
 	 */
 	protected void setCreationDate(Date creation) {
-		//this.testCreationDate 
+		if(creation == null) testCreationDate.setModel(new SpinnerDateModel()); // if null, create a new JSpinner
+		else {
+			SpinnerDateModel sdm = new SpinnerDateModel();
+			sdm.setValue(creation);
+			testCreationDate.setModel(sdm);
+		}
 	}
 	
 	/**
@@ -476,13 +483,65 @@ public class TestCaseEditPane extends JPanel implements Observer, Serializable {
 	}
 	
 	/**
-	 * Notifies the Observer of TestCaseEditPane that a change has occured. 
-	 * @param obs The Observable Object Observed by TestCaseEditPane.
-	 * @param obj Object that underwent change. 
-	 */
-	public void update(Observable obs, Object obj) {
-	
-	}
-		
-	
+     * This method is called by the observed object, whenever the observed
+     * object is changed. In this case, the observed object an instance of a TestCaseList.
+     * Any changes either within the TestCaseList or TestCaseData within the TestCaseList, will 
+     * lead to an update of the TestCaseListPane, as well as the TestCaseTableModel.
+     * 
+     * @param o the observable object TestCaseData or TestingTypeList
+     * @param arg any additional information needed about the change.
+     */
+	 public void update(Observable o, Object arg) {
+		//TestCaseData needs to be udpated if a change was noticed in the test case list.
+		 //This is because the test case data is used for the TestCaseTableModel
+		if(o instanceof TestCaseList) { //if the change was a TCL, need up update the data.
+			TestCaseList tcd = (TestCaseList) o; //cast to TestCaseData
+			TestCaseListPane pane = new TestCaseListPane(tcd); 
+			TestCaseTableModel tm = pane.getTestCaseTableModel();
+			if(tm.getColumnCount() != data.getDataArray().length)
+				pane.update( o, pane);
+			
+			else {
+			      Object[][] arr = tcd.get2DArray();
+	                for (int i = 0; i < arr.length; i++) {
+	                    for (int j = 0; j < tm.getColumnCount(); j++) {
+	                        tm.setValueAt(arr[i][j], i, j);
+				
+	                    }
+	                }
+			}
+		}
+	 }
 }
+
+		
+		
+		
+//		
+//		
+//		
+//		
+//		
+//		{	//comparing all fields of the changed obj to that of the 
+//				data = tcd.getFields();
+//				notifyObservers(tcd, this);
+//			}
+//				//Overwrite the old data with the changed (because they were editing)
+//			} //just updating if a change was made to the TestCaseData.
+////		}
+////		else {
+////			//the change was within the list, which will change the TestCAseListPane and TestCaseTableModel
+////			notifyObservers(this);
+////		}
+////			
+////			TestCaseEditPane tcep = new TestCaseEditPane(tcd, testingTypes) //create a panel to compare the two fields.
+////			if(tcep.getFields().getTestCaseID().compareTo(data.getTestCaseID())
+////					
+////				
+//				
+//	 }
+//
+//
+//	 }
+//	
+//
